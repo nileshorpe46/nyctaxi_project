@@ -1,7 +1,19 @@
 # Databricks notebook source
+
+import sys
+import os
+
+# Go two levels up to reach the project root
+project_root = os.path.abspath(os.path.join(os.getcwd(), "../.."))
+
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+
 import urllib.request
 import shutil
-import os
+from modules.data_loader.file_downloader import download_file
+
 
 # COMMAND ----------
 
@@ -19,6 +31,9 @@ try:
 
     # Define the full path for downloaded file
     local_path = f"{dir_path}/taxi_zone_lookup.csv"
+
+    # Download the file
+    download_file(url, dir_path, local_path)
 
     # Save the streamed content to the local file in binary mode
     with open(local_path, "wb") as f:

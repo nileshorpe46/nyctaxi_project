@@ -1,15 +1,29 @@
 # Databricks notebook source
+
+import sys
+import os
+
+# Go two levels up to reach the project root
+project_root = os.path.abspath(os.path.join(os.getcwd(), "../.."))
+
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+
+
 import urllib.request
 import os
 import shutil
 from datetime import datetime
 from datetime import date,datetime,timezone
 from dateutil.relativedelta import relativedelta
+from modules.utils.date_utils import get_target_yyyymm
+from modules.data_loader.file_downloader import download_file
+
 
 
 # Obtain the year-month for 2 months prior to the current month in yyyy-MM format
-two_months_ago = date.today() - relativedelta(months=2)
-formatted_date = two_months_ago.strftime('%Y-%m')
+formatted_date = get_target_yyyymm(2)
 
 # Define the local directory for this date's data
 dir_path = f'/Volumes/nyctaxi/00_landing/data_sources/nyctaxi_yellow/{formatted_date}'
@@ -31,17 +45,11 @@ except:
         # Construct URL for parquet file corresponding to this month
         url = f'https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{formatted_date}.parquet'
 
-        # Open a connection and stream the remote file
-        response = urllib.request.urlopen(url)
+        # Download the file
+        # Create the local directory for this date's data
+        download_file(url, dir_path, local_path)
 
-        # Create a local directory for this date's data
-        os.makedirs(dir_path, exist_ok=True)
-
-        # Save the streamed content to local file in binary mode
-        with open(local_path, 'wb') as f:
-            shutil.copyfileobj(response, f) # copy data from response to file
-
-        # Set continue_downstream to YES
+        # Set continue_downstream to YES if the file was loaded
         dbutils.jobs.taskValues.set(key='continue_downstream', value='yes')
         print(f'file successfully uploaded in current run')
 
